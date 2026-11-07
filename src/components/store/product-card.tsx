@@ -111,11 +111,11 @@ export function ProductCard({ product }: ProductCardProps) {
           onClick={() => {openModal('request'); }}>اطلب المنتج </button>}
         </div>
         </div>
-          <button 
+        <button 
         type="button" 
         disabled={checkingAlternatives}
         onClick={findAlternatives} 
-        className="w-full rounded-xl border border-emerald-700 px-3 mb-2 mx-2 py-2 text-xs font-bold
+        className=" rounded-xl border border-emerald-700 px-3 mb-2 m-auto w-[90%] py-2 text-xs font-bold
          text-emerald-800 transition hover:bg-emerald-50 disabled:opacity-60 sm:w-auto
          ">{checkingAlternatives ? 'جارٍ البحث...' : 'بدائل هذا الصنف'}
          </button>
