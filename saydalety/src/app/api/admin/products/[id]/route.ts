@@ -1,0 +1,76 @@
+import { NextResponse } from 'next/server';
+import { eq } from 'drizzle-orm';
+import { z } from 'zod';
+import { db } from '@/db';
+import { inventoryMovements, productImages, products } from '@/db/schema';
+import { requireAdminResponse } from '@/lib/auth/require-admin';
+import { deleteCloudinaryImages } from '@/lib/cloudinary';
+
+export const runtime = 'nodejs';
+const schema = z.object({
+  name: z.string().trim().min(2).max(220),
+  scientificName: z.string().trim().min(2, 'الاسم العلمي مطلوب.').max(220),
+  englishName: z.string().trim().min(2, 'الاسم الإنجليزي مطلوب.').max(220),
+  slug: z.string().trim().min(2).max(240).regex(/^[a-z0-9-]+$/),
+  description: z.string().max(5000).optional().nullable(),
+  categoryId: z.string().uuid().optional().nullable(),
+  type: z.enum(['medicine', 'medical_supply', 'cosmetics', 'health_product']),
+  price: z.coerce.number().min(0),
+  discount: z.coerce.number().min(0).max(100),
+  quantity: z.coerce.number().min(0),
+  unitsPerPack: z.coerce.number().int().min(1).max(1000),
+  unitName: z.string().trim().min(1).max(40),
+  lowStockThreshold: z.coerce.number().int().min(0),
+  requiresPrescription: z.boolean(),
+  isActive: z.boolean(),
+});
+
+export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const auth = await requireAdminResponse();
+  if (auth.response) return auth.response;
+  const { id } = await params;
+  const parsed = schema.safeParse(await req.json().catch(() => null));
+  if (!parsed.success) return NextResponse.json({ error: 'الاسم العلمي والاسم الإنجليزي وباقي بيانات المنتج مطلوبة وصحيحة.' }, { status: 400 });
+  try {
+    const result = await db.transaction(async (tx) => {
+      const [current] = await tx.select().from(products).where(eq(products.id, id)).for('update');
+      if (!current) return false;
+      const [updated] = await tx.update(products).set({
+        ...parsed.data,
+        quantity: Math.round(parsed.data.quantity * parsed.data.unitsPerPack),
+        price: parsed.data.price.toFixed(2),
+        discount: parsed.data.discount.toFixed(2),
+        updatedAt: new Date(),
+      }).where(eq(products.id, id)).returning({ id: products.id });
+      const nextStock = Math.round(parsed.data.quantity * parsed.data.unitsPerPack);
+      const delta = nextStock - current.quantity;
+      if (delta !== 0) await tx.insert(inventoryMovements).values({
+        productId: id,
+        movementType: 'adjustment',
+        quantityChange: delta,
+        quantityAfter: nextStock,
+        note: 'تعديل كمية المخزون من إدارة المنتجات',
+      });
+      return Boolean(updated);
+    });
+    return result ? NextResponse.json({ ok: true }) : NextResponse.json({ error: 'المنتج غير موجود.' }, { status: 404 });
+  } catch (error) {
+    console.error('Update product failed:', error);
+    return NextResponse.json({ error: 'تعذر تحديث المنتج. تأكد من عدم تكرار الرابط المختصر.' }, { status: 409 });
+  }
+}
+
+export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const auth = await requireAdminResponse();
+  if (auth.response) return auth.response;
+  const { id } = await params;
+  const result = await db.transaction(async (tx) => {
+    const [updated] = await tx.update(products).set({ isActive: false, updatedAt: new Date() }).where(eq(products.id, id)).returning({ id: products.id });
+    if (!updated) return null;
+    const images = await tx.delete(productImages).where(eq(productImages.productId, id)).returning({ publicId: productImages.publicId });
+    return images.map((image) => image.publicId || '').filter(Boolean);
+  });
+  if (!result) return NextResponse.json({ error: 'المنتج غير موجود.' }, { status: 404 });
+  const cleanupFailures = await deleteCloudinaryImages(result);
+  return NextResponse.json({ ok: true, message: 'تم إخفاء المنتج وحذف صوره من التخزين السحابي مع الاحتفاظ بسجل الطلبات.', cleanupWarning: cleanupFailures.length ? 'تعذر حذف بعض الصور من Cloudinary. راجع سجلات الخادم.' : undefined });
+}
