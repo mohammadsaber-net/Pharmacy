@@ -61,7 +61,7 @@ export function DailyOfferSection(props: DailyOfferSectionProps) {
       <motion.section
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mt-10 `rounded-[2rem]` bg-slate-50 p-8 text-center sm:p-12"
+        className="mt-10 rounded-[2rem] bg-slate-50 p-8 text-center sm:p-12"
       >
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-200 text-slate-500">
           <Gift size={30} />
@@ -93,7 +93,7 @@ export function DailyOfferSection(props: DailyOfferSectionProps) {
         initial={{ opacity: 0, y: 25 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="relative mt-10 overflow-hidden `rounded-[2rem]` `bg-gradient-to-bl` from-emerald-50 via-white to-amber-50 px-6 py-10 text-center sm:px-10 sm:py-14"
+        className="relative mt-10 overflow-hidden rounded-[2rem] bg-gradient-to-bl from-emerald-50 via-white to-amber-50 px-6 py-10 text-center sm:px-10 sm:py-14"
       >
         <div className="absolute -right-12 -top-12 h-40 w-40 rounded-full bg-emerald-200/30 blur-3xl" />
         <div className="absolute -bottom-16 -left-12 h-48 w-48 rounded-full bg-amber-200/30 blur-3xl" />
@@ -140,7 +140,7 @@ export function DailyOfferSection(props: DailyOfferSectionProps) {
       <motion.section
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="mt-10 `rounded-[2rem]` `bg-gradient-to-l` from-emerald-50 to-white p-8 text-center"
+        className="mt-10 rounded-[2rem] bg-gradient-to-l from-emerald-50 to-white p-8 text-center"
       >
         <Gift className="mx-auto text-emerald-700" size={38} />
 
@@ -169,7 +169,7 @@ export function DailyOfferSection(props: DailyOfferSectionProps) {
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.65, ease: "easeOut" }}
-      className="relative mt-10 overflow-hidden `rounded-[2rem]` `bg-gradient-to-br` from-gray-100 via-white to-gray-100 p-3 shadow-xl shadow-emerald-950/10 sm:p-6 lg:p-8"
+      className="relative mt-10 overflow-hidden rounded-[2rem] bg-gradient-to-br from-gray-100 via-white to-gray-100 p-3 shadow-xl shadow-emerald-950/10 sm:p-6 lg:p-8"
     >
       <div className="pointer-events-none absolute -right-20 -top-24 h-72 w-72 rounded-full bg-emerald-400/10 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-28 -left-20 h-72 w-72 rounded-full bg-teal-300/10 blur-3xl" />
@@ -180,29 +180,22 @@ export function DailyOfferSection(props: DailyOfferSectionProps) {
           initial="hidden"
           animate="visible"
           className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center"
-        >
-          <motion.div variants={itemVariants}>
-            <div className="inline-flex items-center gap-2 rounded-full bg-amber-400 px-4 py-2 text-xs font-bold text-emerald-950">
-              <Sparkles size={15} />
-              اختيار الصيدلية اليوم
-            </div>
-
-            <h2 className="mt-2 text-2xl font-black leading-tight text-emerald-900 sm:text-3xl lg:text-4xl">
-              {props.title}
-            </h2>
-
-            {props.description && (
-              <p className="mt-2 max-w-xl text-sm leading-7 text-emerald-100/80 sm:text-base">
-                {props.description}
-              </p>
-            )}
-          </motion.div>
-
+        > 
           <motion.div variants={itemVariants}>
             <div className="flex w-fit shrink-0 items-center gap-2 rounded-2xl bg-amber-400 px-3 py-1.5 font-black text-emerald-950 shadow-lg shadow-black/10">
               <BadgePercent size={22} />
               عرض اليوم
             </div>
+          </motion.div>
+          <motion.div variants={itemVariants}>
+            <h2 className="mt-2 text-2xl font-black leading-tight text-emerald-900 sm:text-3xl lg:text-4xl">
+              {props.title}
+            </h2>
+            {props.description && (
+              <p className="mt-2 max-w-xl text-sm leading-7 text-emerald-100/80 sm:text-base">
+                {props.description}
+              </p>
+            )}
           </motion.div>
         </motion.div>
 

@@ -18,7 +18,7 @@ function CategorySkeleton() {
 }
 
 function ProductSkeleton() {
-  return <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">{Array.from({ length: 8 }).map((_, index) => <div key={index} className="overflow-hidden rounded-2xl border border-slate-200 bg-white"><div className="`aspect-[4/3]` animate-pulse bg-slate-100" /><div className="space-y-3 p-4"><div className="h-4 w-3/4 animate-pulse rounded bg-slate-100" /><div className="h-3 w-full animate-pulse rounded bg-slate-100" /><div className="h-5 w-1/2 animate-pulse rounded bg-slate-100" /></div></div>)}</div>;
+  return <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">{Array.from({ length: 8 }).map((_, index) => <div key={index} className="overflow-hidden rounded-2xl border border-slate-200 bg-white"><div className="aspect-[4/3] animate-pulse bg-slate-100" /><div className="space-y-3 p-4"><div className="h-4 w-3/4 animate-pulse rounded bg-slate-100" /><div className="h-3 w-full animate-pulse rounded bg-slate-100" /><div className="h-5 w-1/2 animate-pulse rounded bg-slate-100" /></div></div>)}</div>;
 }
 
 async function HomeCategories() {
@@ -197,7 +197,7 @@ async function HomeDailyOffer() {
 export default function HomePage() {
   return <><StoreHeader />
   <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-    <section className="overflow-hidden `rounded-[2rem]` `bg-gradient-to-l` from-emerald-900 via-emerald-800 to-teal-700 px-6 py-12 text-white sm:px-12 sm:py-16">
+    <section className="overflow-hidden rounded-[2rem] bg-gradient-to-b from-emerald-900 via-emerald-800 to-teal-700 px-6 py-12 text-white sm:px-12 sm:py-16">
       <div className="max-w-2xl">
         <span className="rounded-full bg-white/15 px-4 py-2 text-sm font-semibold"
         >أهلًا بك في صيدلية د/ محمد صابر</span>

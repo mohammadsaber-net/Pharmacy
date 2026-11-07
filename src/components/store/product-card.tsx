@@ -63,7 +63,7 @@ export function ProductCard({ product }: ProductCardProps) {
   return (
     <article className="flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-gray-100 transition hover:-translate-y-1 hover:shadow-lg">
       <Link href={`/products/${product.slug}`} className="flex flex-1 flex-col">
-        <div className="relative flex `aspect-[4/3]` items-center justify-center `bg-gradient-to-br` from-emerald-50 to-slate-100">
+        <div className="relative flex aspect-[4/3] items-center justify-center bg-gradient-to-br from-emerald-50 to-slate-100">
           {(product.images?.find((image) => image.isPrimary)?.imageUrl || product.imageUrl) ? (
             <Image src={product.images?.find((image) => image.isPrimary)?.imageUrl || product.imageUrl!} alt={product.name} fill sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw" unoptimized className="object-contain p-5" />
           ) : (
