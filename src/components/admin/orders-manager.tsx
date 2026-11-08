@@ -6,8 +6,45 @@ type Order={id:string;orderNumber:string;customerName:string;phone:string;addres
 const labels:Record<string,string>={pending:'جديد',confirmed:'تم التأكيد',preparing:'قيد التجهيز',out_for_delivery:'خرج للتوصيل',delivered:'تم التسليم',cancelled:'ملغي'};
 export default function OrdersManager(){
  const router = useRouter();const { toast } = useStoreUi();const [rows,setRows]=useState<Order[]>([]);const [isLoading,setIsLoading]=useState(true);const [error,setError]=useState('');
-const load = useCallback(async () => {setIsLoading(true);try{const r=await fetch('/api/admin/orders');if(r.status===401){router.replace('/admin/login');return;}setRows(await r.json());}finally{setIsLoading(false);}}, [router])
-useEffect(() => { void Promise.resolve().then(load).catch(()=>setError('تعذر تحميل الطلبات')); }, [load]);
+const load = useCallback(async () => {
+  setIsLoading(true);
+  setError('');
+
+  try {
+    const response = await fetch('/api/admin/orders', {
+      cache: 'no-store',
+    });
+
+    if (response.status === 401) {
+      router.replace('/admin/login');
+      return;
+    }
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'تعذر تحميل الطلبات');
+    }
+
+    if (!Array.isArray(data)) {
+      throw new Error('استجابة الطلبات غير صحيحة');
+    }
+    console.log(data)
+    setRows(data);
+  } catch (error) {
+    setRows([]);
+    setError(
+      error instanceof Error
+        ? error.message
+        : 'تعذر تحميل الطلبات'
+    );
+  } finally {
+    setIsLoading(false);
+  }
+}, [router]);
+ useEffect(() => {
+     void Promise.resolve().then(load).catch(()=>setError('تعذر تحميل الطلبات')); 
+    }, [load]);
 async function update(orderId:string,status:string){setError('');const r=await fetch('/api/admin/orders',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({orderId,status})});const d=await r.json();if(!r.ok){setError(d.error);toast(d.error || 'تعذر تحديث حالة الطلب.','error');return;}toast(status === 'confirmed' ? 'تم تأكيد الطلب بنجاح.' : `تم تحديث حالة الطلب إلى ${labels[status] || status}.`,'success');await load();}
 return <section dir="rtl" 
 className="overflow-hidden rounded-2xl border bg-white">

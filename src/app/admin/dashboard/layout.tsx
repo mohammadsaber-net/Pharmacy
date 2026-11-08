@@ -39,7 +39,7 @@ export default async function AdminDashboardLayout({ children }: Readonly<{ chil
         </Link>
         <div className="admin-nav-label">القائمة الرئيسية</div>
         <nav className="admin-nav" aria-label="القائمة الرئيسية">
-          {visibleNavigation.map((item) => (
+          {navigation.map((item) => (
             <Link href={item.href} key={item.href} className="admin-nav-link">
               <span className="admin-nav-icon" aria-hidden="true">{item.icon}</span>
               <span>{item.label}</span>
@@ -60,7 +60,7 @@ export default async function AdminDashboardLayout({ children }: Readonly<{ chil
         <div className="bg-white">
 
         <nav className="admin-mobile-nav" aria-label="التنقل السريع">
-          {visibleNavigation.map((item) => <Link href={item.href} key={item.href}>{item.label}</Link>)}
+          {navigation.map((item) => <Link href={item.href} key={item.href}>{item.label}</Link>)}
         </nav>
         </div>
         <DeliveryRequestAlerts />
