@@ -11,7 +11,7 @@ export function StoreHeader() {
   const { openModal } = useStoreUi();
   const cartCount = items.reduce((sum, item) => sum + item.quantity, 0);
   const closeMenu = () => setMenuOpen(false);
-  return <header className="store-header sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
+  return <header className="store-header sticky top-0 z-40 border-b border-slate-200 bg-white">
     <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
       <Link href="/" className="shrink-0" onClick={closeMenu}><span className="block text-2xl font-black text-emerald-700">صيدليتي</span><span className="text-xs text-slate-500">صحتك تهمنا</span></Link>
       <nav className="hidden items-center gap-6 text-sm font-semibold md:flex">

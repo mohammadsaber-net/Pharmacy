@@ -2,12 +2,12 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { count, eq, sql } from 'drizzle-orm';
 import { db } from '@/db';
-import { categories, customerMessages, orders, products, productRequests } from '@/db/schema';
+import { categories, customerMessages, orders, products, productRequests, deliveryRequests } from '@/db/schema';
 import { getCurrentAdmin } from '@/lib/auth/session';
 export const dynamic = 'force-dynamic';
 export default async function AdminDashboardPage() {
   const admin = await getCurrentAdmin(); if (!admin) redirect('/admin/login');
-  const [[productCount],[categoryCount],[orderCount],[pendingCount],[lowStockCount],[newRequestCount],[unreadMessageCount]] = await Promise.all([
+  const [[productCount],[categoryCount],[orderCount],[pendingCount],[lowStockCount],[newRequestCount],[unreadMessageCount],[deliveryRequestCount]] = await Promise.all([
     db.select({value:count()}).from(products).where(eq(products.isActive,true)),
     db.select({value:count()}).from(categories).where(eq(categories.isActive,true)),
     db.select({value:count()}).from(orders),
@@ -15,15 +15,20 @@ export default async function AdminDashboardPage() {
     db.select({value:count()}).from(products).where(sql`${products.isActive} = true AND ${products.quantity} <= ${products.lowStockThreshold}`),
     db.select({value:count()}).from(productRequests).where(eq(productRequests.status,'new')),
     db.select({value:count()}).from(customerMessages).where(eq(customerMessages.status,'unread')),
+    db.select({value:count()}).from(deliveryRequests),
   ]);
-  const links = [
+  const allLinks = [
     ['/admin/dashboard/products','إدارة المنتجات','إضافة وتعديل وإخفاء المنتجات'],
     ['/admin/dashboard/categories','التصنيفات','إدارة تصنيفات المتجر'],
     ['/admin/dashboard/orders','الطلبات','مراجعة الطلبات وتحديث حالاتها'],
     ['/admin/dashboard/inventory','المخزون','تعديل الأرصدة ومراجعة سجل الحركات'],
     ['/admin/dashboard/requests','طلبات المنتجات','متابعة طلبات المنتجات غير المتوفرة'],
     ['/admin/dashboard/messages','رسائل العملاء','قراءة الرسائل وتسجيل الردود'],
+    ['/admin/dashboard/payments','المدفوعات','مراجعة إيصالات InstaPay وتأكيد التحويلات'],
+    ['/admin/dashboard/settings','إعدادات التوصيل والدفع','تفعيل التوصيل وإدارة بيانات الدفع'],
+    [['/admin/dashboard/team','المستخدمون والصلاحيات','إضافة أدمنز وتحديد صلاحياتهم']] ,
   ];
+  // const links = allLinks.filter(([href]) => { if (admin.role === 'owner') return true; const key = String(href).split('/').pop(); return admin.permissions.includes(key === 'team' ? 'settings' : key === 'products' || key === 'offers' || key === 'categories' || key === 'orders' || key === 'inventory' || key === 'requests' || key === 'messages' || key === 'payments' || key === 'settings' ? key : ''); });
   return <main className="mx-auto max-w-6xl px-4 py-8" dir="rtl">
     <div 
     className="mb-8 flex flex-wrap items-center justify-between gap-4">
@@ -44,6 +49,7 @@ export default async function AdminDashboardPage() {
               ,['مخزون منخفض',lowStockCount.value]
               ,['طلبات منتجات جديدة',newRequestCount.value]
               ,['رسائل غير مقروءة',unreadMessageCount.value]
+              ,['طلبات توصيل (كل الأوقات)',deliveryRequestCount.value]
             ].map(([label,value])=><div key={String(label)}
              className="rounded-2xl border bg-white p-5">
               <p className="text-sm text-gray-500">{label}</p>
@@ -51,13 +57,15 @@ export default async function AdminDashboardPage() {
               </div>)}
           </section>
           <section className="grid gap-4 grid-cols-2 md:grid-cols-3">
-            {links.map(([href,title,desc])=>
-            <Link href={href} key={href} 
+            {allLinks.map((link:any)=>{
+            return(<Link href={link[0]} key={link[0]} 
             className="rounded-2xl border bg-white p-6 transition
              hover:border-indigo-300 hover:shadow-sm">
-              <h2 className="mb-2 text-xl font-bold">{title}</h2>
-              <p className="text-sm text-gray-500">{desc}</p>
+              <h2 className="mb-2 text-xl font-bold">{link[1]}</h2>
+              <p className="text-sm text-gray-500">{link[2]}</p>
               <span className="mt-5 inline-block text-sm font-semibold
-               text-indigo-700">فتح الإدارة ←</span></Link>)}</section>
+               text-indigo-700">فتح الإدارة ←</span>
+              </Link>)})}
+            </section>
                </main>;
 }

@@ -22,7 +22,7 @@ export const productTypeEnum = pgEnum('product_type', [
 export const orderStatusEnum = pgEnum('order_status', [
   'pending', 'confirmed', 'preparing', 'out_for_delivery', 'delivered', 'cancelled',
 ]);
-export const paymentMethodEnum = pgEnum('payment_method', ['cash_on_delivery']);
+export const paymentMethodEnum = pgEnum('payment_method', ['cash_on_delivery', 'instapay']);
 export const paymentStatusEnum = pgEnum('payment_status', ['unpaid', 'paid', 'refunded']);
 export const requestStatusEnum = pgEnum('request_status', ['new', 'contacted', 'fulfilled', 'rejected']);
 export const messageStatusEnum = pgEnum('message_status', ['unread', 'read', 'replied', 'archived']);
@@ -39,6 +39,8 @@ export const admins = pgTable('admins', {
   id: uuid('id').defaultRandom().primaryKey(),
   fullName: varchar('full_name', { length: 160 }).notNull(),
   email: varchar('email', { length: 255 }).notNull(),
+  role: varchar('role', { length: 20 }).notNull().default('admin'),
+  permissions: jsonb('permissions').$type<string[]>().notNull().default([]),
   passwordHash: text('password_hash').notNull(),
   isActive: boolean('is_active').notNull().default(true),
   lastLoginAt: timestamp('last_login_at', { withTimezone: true }),
@@ -115,7 +117,8 @@ export const orders = pgTable('orders', {
   orderNumber: varchar('order_number', { length: 32 }).notNull(),
   customerName: varchar('customer_name', { length: 160 }).notNull(),
   phone: varchar('phone', { length: 20 }).notNull(),
-  address: text('address').notNull(),
+  address: text('address').notNull().default(''),
+  deliveryType: varchar('delivery_type', { length: 20 }).notNull().default('pickup'),
   notes: text('notes'),
   subtotal: numeric('subtotal', { precision: 12, scale: 2 }).notNull(),
   deliveryFee: numeric('delivery_fee', { precision: 12, scale: 2 }).notNull().default('0'),
@@ -124,6 +127,7 @@ export const orders = pgTable('orders', {
   paymentMethod: paymentMethodEnum('payment_method').notNull().default('cash_on_delivery'),
   paymentStatus: paymentStatusEnum('payment_status').notNull().default('unpaid'),
   status: orderStatusEnum('status').notNull().default('pending'),
+  paymentReceipt: text('payment_receipt'),
   ...timestamps,
 }, (table) => [uniqueIndex('orders_order_number_unique').on(table.orderNumber), index('orders_status_created_idx').on(table.status, table.createdAt), index('orders_phone_idx').on(table.phone), check('orders_amounts_nonnegative_check', sql`${table.subtotal} >= 0 AND ${table.deliveryFee} >= 0 AND ${table.total} >= 0`)]);
 
@@ -200,6 +204,23 @@ export const offerProducts = pgTable('offer_products', {
   offerPrice: numeric('offer_price', { precision: 12, scale: 2 }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 }, (table) => [uniqueIndex('offer_products_offer_product_unique').on(table.offerId, table.productId), index('offer_products_product_idx').on(table.productId)]);
+
+export const storeSettings = pgTable('store_settings', {
+  id: integer('id').primaryKey().default(1),
+  deliveryEnabled: boolean('delivery_enabled').notNull().default(false),
+  instaPayNumber: varchar('instapay_number', { length: 80 }).notNull().default(''),
+  deliveryFee: numeric('delivery_fee', { precision: 12, scale: 2 }).notNull().default('0'),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const deliveryRequests = pgTable('delivery_requests', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  customerName: varchar('customer_name', { length: 160 }),
+  phone: varchar('phone', { length: 20 }),
+  wasEnabled: boolean('was_enabled').notNull().default(false),
+  acknowledgedAt: timestamp('acknowledged_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [index('delivery_requests_created_idx').on(table.createdAt), index('delivery_requests_ack_idx').on(table.acknowledgedAt)]);
 
 // Reserved for future structured product metadata; keep sensitive prescription data out of public product records.
 export const productMetadata = pgTable('product_metadata', {

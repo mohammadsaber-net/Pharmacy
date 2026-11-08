@@ -22,7 +22,7 @@ export async function getActiveOfferPrices(productIds: string[]) {
     const isManual = row.featuredDate === today;
     const currentManual = current?.offerTitle.startsWith('★') ?? false;
     if (isManual && !currentManual || (isManual === currentManual && (effectiveCandidate != null ? effectiveCandidate < currentPrice : discount > Number(current?.discount ?? 0)))) {
-      result.set(row.productId, { price: candidate.toFixed(2), discount: totalDiscount.toFixed(2), offerTitle: `${isManual ? '★' : ''}${row.title}` });
+      result.set(row.productId, { price: candidate.toFixed(1), discount: totalDiscount.toFixed(2), offerTitle: `${isManual ? '★' : ''}${row.title}` });
     }
   }
   return result;

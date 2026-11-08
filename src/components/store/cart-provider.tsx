@@ -18,9 +18,8 @@ export function CartProvider({children}:{children:React.ReactNode}){
   const others=current.filter(i=>!(i.productId===id&&i.unitMode===fromMode));
   const merge=(list:CartItem[],next:CartItem)=>{const found=list.find(i=>i.productId===id&&i.unitMode===next.unitMode);return found?list.map(i=>i.productId===id&&i.unitMode===next.unitMode?{...i,quantity:i.quantity+next.quantity}:i):[...list,next];};
   if(toMode==='single')return merge(others,{...item,unitMode:'single',unitName:item.smallUnitName,price,quantity:item.quantity*item.unitsPerPack});
-  const packs=Math.floor(item.quantity/item.unitsPerPack);const remainder=item.quantity%item.unitsPerPack;if(packs<1)return current;
-  const withRemainder=remainder?[...others,{...item,quantity:remainder}]:others;
-  return merge(withRemainder,{...item,unitMode:'pack',unitName:item.packName,price,quantity:packs});
+  const packs=Math.ceil(item.quantity/item.unitsPerPack);
+  return merge(others,{...item,unitMode:'pack',unitName:item.packName,price,quantity:packs});
  }),[]);
  const clearCart=useCallback(()=>setItems([]),[]);const value=useMemo(()=>({items,addItem,updateQuantity,removeItem,changeUnitMode,clearCart}),[items,addItem,updateQuantity,removeItem,changeUnitMode,clearCart]);
  return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

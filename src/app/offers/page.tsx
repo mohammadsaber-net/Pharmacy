@@ -2,30 +2,28 @@ import Link from 'next/link';
 import Image from 'next/image';
 import type { Metadata } from 'next';
 import { desc, eq, inArray } from 'drizzle-orm';
-import { StoreHeader } from '@/components/store/header';import { StoreFooter } from '@/components/store/footer';import { db } from '@/db';import { offers,offerProducts,products,productImages } from '@/db/schema';import { formatEGP } from '@/lib/money';
-export const dynamic='force-dynamic';export const metadata:Metadata={title:'عروض صيدليتي',description:'تصفح أحدث عروض وخصومات صيدليتي.'};
-export default async function OffersPage(){const rows=await db.select().from(offers).orderBy(desc(offers.createdAt));const links=rows.length?await db.select({offerId:offerProducts.offerId,productId:products.id,name:products.name,slug:products.slug,price:products.price,discount:offerProducts.discountPercent,offerPrice:offerProducts.offerPrice}).from(offerProducts).innerJoin(products,eq(offerProducts.productId,products.id)).where(inArray(offerProducts.offerId,rows.map(r=>r.id))):[];const ids=[...new Set(links.map(x=>x.productId))];const images=ids.length?await db.select({productId:productImages.productId,imageUrl:productImages.imageUrl,isPrimary:productImages.isPrimary}).from(productImages).where(inArray(productImages.productId,ids)):[];const now=new Date();return <>
-<StoreHeader/>
-<main dir="rtl" className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-    <div className="mb-8 rounded-3xl `bg-gradient-to-l` from-emerald-950 to-teal-700 p-8 text-white">
-        <p className="text-sm font-bold text-emerald-100">فرصتك للتوفير</p>
-        <h1 className="mt-2 text-3xl font-black">عروض صيدليتي</h1>
-        <p className="mt-3 text-emerald-50"
-        >العروض الحالية والسابقة في مكان واحد، ويمكنك العودة للعروض التي انتهت.</p>
-        </div>{rows.length?<div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {rows.map(o=>{const items=links.filter(x=>x.offerId===o.id);
-            const active=o.isActive&&o.startsAt<=now&&o.endsAt>=now;return <article
-             key={o.id} className="overflow-hidden rounded-2xl border border-emerald-200
-              bg-white shadow-sm">
-                <div className="relative flex h-40 items-center justify-center
-                `bg-gradient-to-br` from-emerald-50 to-slate-100">{o.imageUrl?
-                <Image src={o.imageUrl} alt={o.title} fill sizes="(max-width: 640px) 
-                100vw, 33vw" unoptimized className="object-cover"/>:
-                <span className="text-5xl">🎁</span>}
-                <span className={`absolute right-3 top-3 rounded-full px-3 py-1 text-xs 
-                font-bold text-white ${active?'bg-rose-600':'bg-slate-500'}`}>
-                    {active?'عرض متاح':'عرض سابق'}
-                    </span>
-                </div>
-                <div className="p-5">
-                <h2 className="text-lg font-black">{o.title}</h2>{o.description&&<p className="mt-2 text-sm leading-6 text-slate-500">{o.description}</p>}<p className="mt-3 text-xs text-slate-500">{new Date(o.startsAt).toLocaleDateString('ar-EG')} – {new Date(o.endsAt).toLocaleDateString('ar-EG')}</p><div className="mt-4 space-y-2">{items.map(item=>{const img=images.find(i=>i.productId===item.productId&&i.isPrimary)?.imageUrl||images.find(i=>i.productId===item.productId)?.imageUrl;return <Link key={item.productId} href={`/products/${item.slug}`} className="flex items-center gap-3 rounded-xl bg-slate-50 p-2 hover:bg-emerald-50">{img?<Image src={img} alt={item.name} width={48} height={48} className="h-12 w-12 rounded-lg object-contain"/>:<span className="flex h-12 w-12 items-center justify-center rounded-lg bg-white">✚</span>}<span className="min-w-0 flex-1 text-sm font-semibold">{item.name}</span><span className="text-xs font-bold text-emerald-800">{item.offerPrice?formatEGP(item.offerPrice):`خصم ${item.discount??o.discountPercent}%`}</span></Link>})}</div></div></article>})}</div>:<p className="rounded-2xl border border-dashed p-10 text-center text-slate-500">لا توجد عروض حتى الآن.</p>}</main><StoreFooter/></>}
+import { StoreHeader } from '@/components/store/header';
+import { StoreFooter } from '@/components/store/footer';
+import { db } from '@/db';
+import { offers,offerProducts,products,productImages } from '@/db/schema';
+import { formatEGP } from '@/lib/money';
+export const dynamic='force-dynamic';
+export const metadata:Metadata={title:'عروض صيدليتي',description:'تصفح أحدث عروض وخصومات صيدليتي.'};
+export default async function OffersPage(){
+ const rows=await db.select().from(offers).orderBy(desc(offers.createdAt));
+ const links=rows.length?await db.select({offerId:offerProducts.offerId,productId:products.id,name:products.name,slug:products.slug,price:products.price,productDiscount:products.discount,discount:offerProducts.discountPercent,offerPrice:offerProducts.offerPrice}).from(offerProducts).innerJoin(products,eq(offerProducts.productId,products.id)).where(inArray(offerProducts.offerId,rows.map(r=>r.id))):[];
+ const ids=[...new Set(links.map(x=>x.productId))];
+ const images=ids.length?await db.select({productId:productImages.productId,imageUrl:productImages.imageUrl,isPrimary:productImages.isPrimary}).from(productImages).where(inArray(productImages.productId,ids)):[];
+ const now=new Date();const activeCount=rows.filter(o=>o.isActive&&o.startsAt<=now&&o.endsAt>=now).length;
+ return <><StoreHeader/><main dir="rtl" className="mx-auto max-w-7xl px-4 py-9 sm:px-6 lg:px-8">
+  <section className="relative isolate overflow-hidden rounded-[2rem] bg-gradient-to-bl from-emerald-950 via-emerald-800 to-teal-700 px-6 py-10 text-white shadow-xl shadow-emerald-950/10 sm:px-10 sm:py-14">
+   <div className="pointer-events-none absolute -left-16 -top-20 h-64 w-64 rounded-full border-[30px] border-white/5"/><div className="pointer-events-none absolute -bottom-24 right-1/3 h-56 w-56 rounded-full bg-teal-300/10 blur-2xl"/>
+   <div className="relative max-w-2xl"><span className="inline-flex rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs font-bold">✦ عروض صيدليتي</span><h1 className="mt-5 text-3xl font-black leading-tight sm:text-4xl">وفّر أكتر على احتياجاتك الصحية</h1><p className="mt-3 max-w-xl text-sm leading-7 text-emerald-50 sm:text-base">اكتشف الخصومات المتاحة على المنتجات والعروض المميزة، وتأكد من تاريخ كل عرض قبل الطلب.</p><div className="mt-6 flex flex-wrap gap-3"><span className="rounded-xl bg-white/15 px-4 py-2 text-sm font-bold">{activeCount} عروض متاحة الآن</span><Link href="/products" className="rounded-xl bg-white px-5 py-2.5 text-sm font-black text-emerald-900 transition hover:-translate-y-0.5">تصفح المنتجات ←</Link></div></div>
+  </section>
+  {rows.length?<section className="mt-9 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">{rows.map(o=>{const items=links.filter(x=>x.offerId===o.id);const active=o.isActive&&o.startsAt<=now&&o.endsAt>=now;return <article key={o.id} className="group overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:border-emerald-200 hover:shadow-xl hover:shadow-emerald-950/10">
+   <div className="relative flex h-48 items-center justify-center overflow-hidden bg-gradient-to-br from-emerald-50 via-white to-amber-50">{o.imageUrl?<Image src={o.imageUrl} alt={o.title} fill sizes="(max-width: 640px) 100vw,(max-width: 1200px) 50vw,33vw" unoptimized className="object-cover transition duration-500 group-hover:scale-105"/>:<span className="text-6xl transition duration-300 group-hover:scale-110">🎁</span>}<span className={`absolute right-4 top-4 rounded-full px-3 py-1.5 text-xs font-black text-white shadow ${active?'bg-rose-600':'bg-slate-500'}`}>{active?'عرض متاح':'انتهى العرض'}</span>{o.isToday&&<span className="absolute left-4 top-4 rounded-full bg-amber-300 px-3 py-1.5 text-xs font-black text-amber-950">اختيار اليوم ★</span>}</div>
+   <div className="p-5"><div className="flex items-start justify-between gap-3"><div><h2 className="text-lg font-black text-slate-900">{o.title}</h2>{o.description&&<p className="mt-2 text-sm leading-6 text-slate-500">{o.description}</p>}</div><span className="shrink-0 rounded-xl bg-emerald-50 px-3 py-2 text-xs font-black text-emerald-800">{o.discountPercent}%</span></div><p className="mt-3 text-[11px] text-slate-400">من {new Date(o.startsAt).toLocaleDateString('ar-EG')} إلى {new Date(o.endsAt).toLocaleDateString('ar-EG')}</p>
+   <div className="mt-4 space-y-2">{items.map(item=>{const img=images.find(i=>i.productId===item.productId&&i.isPrimary)?.imageUrl||images.find(i=>i.productId===item.productId)?.imageUrl;const base=Number(item.price)*(1-Number(item.productDiscount||0)/100);const percent=Number(item.discount??o.discountPercent);const final=item.offerPrice!=null?Number(item.offerPrice):Math.round(base*(1-percent/100)*10)/10;return <Link key={item.productId} href={`/products/${item.slug}`} className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50/80 p-2.5 transition hover:border-emerald-200 hover:bg-emerald-50">{img?<Image src={img} alt={item.name} width={54} height={54} unoptimized className="h-14 w-14 rounded-xl bg-white object-contain p-1"/>:<span className="flex h-14 w-14 items-center justify-center rounded-xl bg-white text-2xl text-emerald-700">✚</span>}<span className="min-w-0 flex-1"><span className="block text-sm font-bold text-slate-800">{item.name}</span><span className="mt-1 block text-[11px] text-slate-400">خصم {Math.max(0,Math.round((1-final/Number(item.price))*100))}%</span></span><span className="text-left"><strong className="block text-sm font-black text-emerald-800">{formatEGP(final)}</strong><del className="text-[11px] text-slate-400">{formatEGP(item.price)}</del></span></Link>})}</div>
+   </div></article>})}</section>:<div className="mt-9 rounded-3xl border border-dashed border-slate-300 bg-white p-12 text-center"><span className="text-5xl">🎁</span><h2 className="mt-4 text-xl font-black">لا توجد عروض حتى الآن</h2><p className="mt-2 text-sm text-slate-500">تابعنا باستمرار لاكتشاف العروض الجديدة.</p></div>}
+ </main><StoreFooter/></>;
+}

@@ -216,3 +216,12 @@ button, input, textarea { font: inherit; }
   .store-footer .grid { gap: 22px; }
 }
 @media (prefers-reduced-motion: reduce) { .store-modal-panel, .store-toast { animation: none; } }
+
+/* iOS Safari compositing guard: avoid black GPU tiles over animated hero content. */
+@supports (-webkit-touch-callout: none) {
+  .store-hero, main > section:first-child { -webkit-transform: translateZ(0); transform: translateZ(0); isolation: isolate; }
+  main > section:first-child * { -webkit-backface-visibility: hidden; backface-visibility: hidden; }
+}
+
+/* Keep the mobile storefront header opaque on iOS Safari; sticky backdrop filters can paint black tiles. */
+.store-header { background: #fff !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }

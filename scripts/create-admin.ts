@@ -14,10 +14,10 @@ async function main() {
   const passwordHash = await hashPassword(password);
   const [existing] = await db.select({ id: admins.id }).from(admins).where(eq(admins.email, email)).limit(1);
   if (existing) {
-    await db.update(admins).set({ fullName, passwordHash, isActive: true, updatedAt: new Date() }).where(eq(admins.id, existing.id));
+    await db.update(admins).set({ fullName, passwordHash, isActive: true, role: 'owner', permissions: [], updatedAt: new Date() }).where(eq(admins.id, existing.id));
     console.info('Admin account password updated.');
   } else {
-    await db.insert(admins).values({ fullName, email, passwordHash });
+    await db.insert(admins).values({ fullName, email, passwordHash, role: 'owner', permissions: [] });
     console.info('Admin account created.');
   }
   process.exit(0);

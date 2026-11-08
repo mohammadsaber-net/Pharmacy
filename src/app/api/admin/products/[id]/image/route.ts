@@ -14,7 +14,7 @@ const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/avif'];
 type RouteContext = { params: Promise<{ id: string }> };
 
 export async function POST(req: Request, { params }: RouteContext) {
-  const auth = await requireAdminResponse();
+  const auth = await requireAdminResponse('products');
   if (auth.response) return auth.response;
   const { id } = await params;
   const formData = await req.formData().catch(() => null);
@@ -92,7 +92,7 @@ export async function POST(req: Request, { params }: RouteContext) {
 }
 
 export async function DELETE(_req: Request, { params }: RouteContext) {
-  const auth = await requireAdminResponse();
+  const auth = await requireAdminResponse('products');
   if (auth.response) return auth.response;
   const { id } = await params;
   const images = await db.select({ id: productImages.id, publicId: productImages.publicId }).from(productImages).where(eq(productImages.productId, id));

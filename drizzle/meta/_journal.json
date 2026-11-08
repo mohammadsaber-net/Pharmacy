@@ -29,6 +29,13 @@
       "when": 1794083820000,
       "tag": "0003_units_and_offers",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794169800000,
+      "tag": "0004_delivery_payments_roles",
+      "breakpoints": true
     }
   ]
 }

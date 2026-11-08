@@ -21,5 +21,5 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="ar" dir="rtl"><body><CartProvider><StoreUiProvider>{children}</StoreUiProvider></CartProvider></body></html>;
+  return <html lang="ar" dir="rtl"><body className='min-h-[90vh]'><CartProvider><StoreUiProvider>{children}</StoreUiProvider></CartProvider></body></html>;
 }

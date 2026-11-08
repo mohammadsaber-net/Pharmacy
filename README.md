@@ -73,3 +73,19 @@
 - The storefront has a responsive mobile menu, a live cart quantity badge, contact/product-request dialogs, toast notifications, and privacy/terms/policy pages.
 - The legal pages are draft copy and must be reviewed for Egyptian legal and pharmacy requirements before production use.
 # Pharmacy
+
+
+## Phase 8 — Delivery, InstaPay, permissions and offer pricing
+
+After deploying this update, apply the new database migration:
+
+```bash
+npm run db:migrate
+npm run admin:create
+```
+
+Run `admin:create` with the existing owner's `ADMIN_EMAIL` and `ADMIN_PASSWORD` values. This promotes that account to the `owner` role. The owner can then create admin accounts and assign granular permissions from **المستخدمون والصلاحيات**.
+
+The owner can enable/disable home delivery, set delivery fees, and configure the InstaPay number from **إعدادات المتجر**. Delivery selections are counted even while delivery is disabled; customers only see the unavailable notice after selecting the delivery option. InstaPay receipts appear under **المدفوعات** for review.
+
+Offer prices are now calculated automatically from the product's current discounted price and the offer percentage, rounded to one decimal place. The optional manual offer-price field has been removed from the admin form.

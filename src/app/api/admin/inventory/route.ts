@@ -7,7 +7,7 @@ import { requireAdminResponse } from '@/lib/auth/require-admin';
 export const runtime = 'nodejs';
 const PAGE_SIZE = 20;
 export async function GET(request: Request) {
-  const auth = await requireAdminResponse(); if (auth.response) return auth.response;
+  const auth = await requireAdminResponse('inventory'); if (auth.response) return auth.response;
   const params = new URL(request.url).searchParams;
   const page = Math.max(1, Number.parseInt(params.get('page') || '1', 10) || 1);
   const movementPage = Math.max(1, Number.parseInt(params.get('movementPage') || '1', 10) || 1);
@@ -36,7 +36,7 @@ export async function GET(request: Request) {
     {headers:{'Cache-Control':'private, no-store, max-age=0'}});
 }
 export async function POST(request: Request) {
-  const auth=await requireAdminResponse(); if(auth.response)return auth.response;
+  const auth=await requireAdminResponse('inventory'); if(auth.response)return auth.response;
   const parsed=z.object({productId:z.string().uuid(),operation:z.enum(['add','remove','set']),quantity:z.coerce.number().min(0).max(1000000),note:z.string().trim().min(3).max(500)}).refine(d=>d.operation==='set'||d.quantity>0,{message:'الكمية يجب أن تكون أكبر من صفر لهذه العملية.'}).safeParse(await request.json().catch(()=>null));
   if(!parsed.success)return NextResponse.json({error:'راجع المنتج والكمية وسبب حركة المخزون.'},{status:400});
   try { const result=await db.transaction(async tx=>{const [product]=await tx.select().from(products).where(eq(products.id,parsed.data.productId)).for('update');if(!product)throw new Error('PRODUCT_NOT_FOUND');const stockChange=Math.round(parsed.data.quantity*product.unitsPerPack);const next=parsed.data.operation==='set'?stockChange:parsed.data.operation==='add'?product.quantity+stockChange:product.quantity-stockChange;if(next<0)throw new Error('INSUFFICIENT_STOCK');const delta=next-product.quantity;if(delta===0)return {quantity:product.quantity,unchanged:true};await tx.update(products).set({quantity:next,updatedAt:new Date()}).where(eq(products.id,product.id));await tx.insert(inventoryMovements).values({productId:product.id,movementType:parsed.data.operation==='add'?'restock':'adjustment',quantityChange:delta,quantityAfter:next,note:parsed.data.note});return {quantity:next,unchanged:false};});return NextResponse.json({ok:true,...result}); }

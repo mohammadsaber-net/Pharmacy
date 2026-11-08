@@ -7,7 +7,7 @@ import { requireAdminResponse } from '@/lib/auth/require-admin';
 export const runtime = 'nodejs';
 const statusSchema = z.object({ status: z.enum(['pending','confirmed','preparing','out_for_delivery','delivered','cancelled']) });
 export async function GET() {
-  const auth = await requireAdminResponse(); if (auth.response) return auth.response;
+  const auth = await requireAdminResponse('orders'); if (auth.response) return auth.response;
   const rows = await db.select().from(orders).orderBy(desc(orders.createdAt)).limit(200);
   const items = rows.length
     ? await db.select().from(orderItems).where(inArray(orderItems.orderId, rows.map((order) => order.id)))
@@ -23,7 +23,7 @@ export async function GET() {
   });
 }
 export async function PATCH(req: Request) {
-  const auth = await requireAdminResponse(); if (auth.response) return auth.response;
+  const auth = await requireAdminResponse('orders'); if (auth.response) return auth.response;
   const parsed = z.object({ orderId: z.string().uuid(), ...statusSchema.shape }).safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: 'بيانات الحالة غير صحيحة.' }, { status: 400 });
   try {

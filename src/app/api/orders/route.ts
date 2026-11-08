@@ -2,14 +2,17 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { and, eq, gte, inArray, lte } from 'drizzle-orm';
 import { db } from '@/db';
-import { inventoryMovements, orderItems, orders, products, offers, offerProducts } from '@/db/schema';
+import { inventoryMovements, orderItems, orders, products, offers, offerProducts, storeSettings } from '@/db/schema';
 
 export const runtime = 'nodejs';
 
 const orderSchema = z.object({
   customerName: z.string().trim().min(3).max(160),
   phone: z.string().trim().regex(/^[0-9+()\- ]{10,20}$/),
-  address: z.string().trim().min(8).max(1000),
+  address: z.string().trim().max(1000).optional().default(''),
+  deliveryType: z.enum(['pickup','delivery']).default('pickup'),
+  paymentMethod: z.enum(['cash_on_delivery','instapay']).default('cash_on_delivery'),
+  paymentReceipt: z.string().max(4_200_000).optional().nullable(),
   notes: z.string().trim().max(1000).optional().nullable(),
   items: z.array(z.object({ productId: z.string().uuid(), quantity: z.number().int().min(1).max(99), unitMode: z.enum(['pack','single']).default('pack') })).min(1).max(30),
 });
@@ -29,6 +32,11 @@ export async function POST(request: Request) {
   const ids = [...new Set(requested.map((item) => item.productId))];
 
   try {
+    const [settings] = await db.select().from(storeSettings).limit(1);
+    if (parsed.data.deliveryType === 'delivery' && !settings?.deliveryEnabled) return NextResponse.json({ error: 'التوصيل المنزلي غير مفعل حاليًا.' }, { status: 409 });
+    if (parsed.data.deliveryType === 'delivery' && parsed.data.address.trim().length < 8) return NextResponse.json({ error: 'اكتب عنوان التوصيل بالتفصيل.' }, { status: 400 });
+    if (parsed.data.paymentMethod === 'instapay' && !settings?.instaPayNumber) return NextResponse.json({ error: 'InstaPay غير مفعّل للدفع حاليًا. اختر الدفع كاش.' }, { status: 409 });
+    if (parsed.data.paymentMethod === 'instapay' && (!parsed.data.paymentReceipt || !/^data:image\/(png|jpeg|webp);base64,/.test(parsed.data.paymentReceipt))) return NextResponse.json({ error: 'ارفع صورة إيصال تحويل InstaPay.' }, { status: 400 });
     const orderNumber = `SD-${Date.now().toString(36).toUpperCase()}-${crypto.randomUUID().slice(0, 6).toUpperCase()}`;
     const result = await db.transaction(async (tx) => {
       const lockedProducts = await tx.select().from(products).where(inArray(products.id, ids)).for('update');
@@ -73,13 +81,15 @@ export async function POST(request: Request) {
         customerName: parsed.data.customerName,
         phone: parsed.data.phone,
         address: parsed.data.address,
+        deliveryType: parsed.data.deliveryType,
         notes: parsed.data.notes || null,
         subtotal: moneyFromCents(subtotalCents),
-        deliveryFee: '0.00',
-        total: moneyFromCents(subtotalCents),
+        deliveryFee: parsed.data.deliveryType === 'delivery' ? (settings?.deliveryFee || '0.00') : '0.00',
+        total: moneyFromCents(subtotalCents + (parsed.data.deliveryType === 'delivery' ? Math.round(Number(settings?.deliveryFee || 0) * 100) : 0)),
         currency: 'EGP',
-        paymentMethod: 'cash_on_delivery',
+        paymentMethod: parsed.data.paymentMethod,
         paymentStatus: 'unpaid',
+        paymentReceipt: parsed.data.paymentReceipt || null,
         status: 'pending',
       }).returning({ id: orders.id });
 

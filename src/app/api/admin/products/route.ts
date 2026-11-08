@@ -27,7 +27,7 @@ const productSchema = z.object({
 });
 
 export async function GET(req: Request) {
-  const auth = await requireAdminResponse();
+  const auth = await requireAdminResponse('products');
   if (auth.response) return auth.response;
 
   const searchParams = new URL(req.url).searchParams;
@@ -97,7 +97,7 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const auth = await requireAdminResponse();
+  const auth = await requireAdminResponse('products');
   if (auth.response) return auth.response;
   const parsed = productSchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: 'الاسم العلمي والاسم الإنجليزي وباقي بيانات المنتج مطلوبة وصحيحة.' }, { status: 400 });

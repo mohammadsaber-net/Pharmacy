@@ -8,14 +8,14 @@ import { requireAdminResponse } from '@/lib/auth/require-admin';
 export const runtime = 'nodejs';
 
 export async function GET() {
-  const auth = await requireAdminResponse();
+  const auth = await requireAdminResponse('requests');
   if (auth.response) return auth.response;
   const rows = await db.select().from(productRequests).orderBy(desc(productRequests.createdAt)).limit(300);
   return NextResponse.json(rows, { headers: { 'Cache-Control': 'private, no-store, max-age=0' } });
 }
 
 export async function PATCH(request: Request) {
-  const auth = await requireAdminResponse();
+  const auth = await requireAdminResponse('requests');
   if (auth.response) return auth.response;
   const parsed = z.object({
     id: z.string().uuid(),

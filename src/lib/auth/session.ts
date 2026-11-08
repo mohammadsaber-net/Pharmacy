@@ -29,6 +29,8 @@ export async function getCurrentAdmin() {
     id: admins.id,
     fullName: admins.fullName,
     email: admins.email,
+    role: admins.role,
+    permissions: admins.permissions,
   }).from(adminSessions)
     .innerJoin(admins, eq(adminSessions.adminId, admins.id))
     .where(and(

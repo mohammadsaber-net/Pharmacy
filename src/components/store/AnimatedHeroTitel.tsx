@@ -33,16 +33,15 @@ export function AnimatedHeroTitle() {
       {words.map((word, index) => (
         <motion.span
           key={index}
+          style={{ backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden" }}
           variants={{
             hidden: {
               opacity: 0,
               y: 25,
-              filter: "blur(6px)",
             },
             visible: {
               opacity: 1,
               y: 0,
-              filter: "blur(0px)",
               transition: {
                 duration: 0.6,
                 ease: "easeOut",

@@ -26,7 +26,7 @@ const schema = z.object({
 });
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await requireAdminResponse();
+  const auth = await requireAdminResponse('products');
   if (auth.response) return auth.response;
   const { id } = await params;
   const parsed = schema.safeParse(await req.json().catch(() => null));
@@ -61,7 +61,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 }
 
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await requireAdminResponse();
+  const auth = await requireAdminResponse('products');
   if (auth.response) return auth.response;
   const { id } = await params;
   const result = await db.transaction(async (tx) => {
